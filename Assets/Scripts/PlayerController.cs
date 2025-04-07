@@ -7,20 +7,24 @@ using TMPro;
 public class PlayerController : MonoBehaviour
 {
     public float speed = 0;
-    //int jumpCount;
     public TextMeshProUGUI countText;
     public GameObject winTextObject;
     private Rigidbody rb;
     private int count;
     private float movementX;
     private float movementY;
-    //help for double jump feature given from a question on stack overflow
+    //double jump
+    public float jumpHeight = 8;
+    public int MaxJump = 2;
+    public int remaining = 0;
+    public bool isGrounded;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         count = 0;
+        isGrounded = true;
         winTextObject.SetActive(false);
         SetCountText();
     }
@@ -37,36 +41,25 @@ public class PlayerController : MonoBehaviour
     {
         countText.text = "Count: " + count.ToString();
     }
+
+    void Update()
+    {
+        //main logic for jumping
+        //did we press space? if so be jumping
+        //is there are remaining jumps? if  so allow more jumping
+        if((Input.GetKeyDown(KeyCode.Space))&&(remaining > 0))
+        {
+            rb.AddForce(Vector3.up * jumpHeight, ForceMode.Impulse); //impulse instantly applies
+            remaining--;
+            //main jump logic! 
+        }
+    }
+
     void FixedUpdate()
     {
+        //when something happens this will happen regardless of what
         Vector3 movement = new Vector3(movementX, 0.0f, movementY);
         rb.AddForce(movement * speed);
-       /*
-        //Keys
-        bool jump = Input.GetKeyDown(KeyCode.Space);
-
-        //Statics
-        bool isGrounded = Physics.CheckSphere(groundDetector.position, 0.1f, ground);
-        bool isJumping = jump && isGrounded;
-        if(isGrounded)
-        {
-            jumpCount = 0;
-        }
-
-        if(isJumping && isGrounded)
-        {
-            if (isJumping && (jumpCount <= 2))
-            {
-                jumpCount++;
-                if((jumpCount == 1)||(jumpCount == 2))  
-                {
-                    rb.AddForce(Vector3.up * movement);
-                }
-            }
-
-        }
-        */
-
     }
 
     void OnTriggerEnter(Collider other)
@@ -76,10 +69,29 @@ public class PlayerController : MonoBehaviour
             count = count +1;
             other.gameObject.SetActive(false);   
             SetCountText();
-        if(count >=11)
+        if(count >=12)
         {
             winTextObject.SetActive(true);
         }   
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        //are we hitting the ground?
+        if(collision.gameObject.CompareTag("ground"))
+        {
+            isGrounded = true;
+            remaining = MaxJump;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        //are we off of the ground?
+        if((collision.gameObject.CompareTag("ground")))
+        {
+            isGrounded = false;
         }
     }
 
